@@ -12,6 +12,7 @@ class User(Base):
     phone_number = Column(String)
     date_of_birth = Column(DateTime)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    hashed_password = Column(String, nullable=False)
 
     accounts = relationship("Account", back_populates="user")
 
