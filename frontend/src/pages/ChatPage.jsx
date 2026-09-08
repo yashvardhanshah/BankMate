@@ -1,3 +1,4 @@
+import ReactMarkdown from 'react-markdown'
 import { useState, useRef, useEffect } from 'react'
 
 function ChatPage() {
@@ -64,7 +65,7 @@ function ChatPage() {
                     : 'bg-white text-slate-800 shadow-sm rounded-bl-sm'
                 }`}
               >
-                {msg.text}
+                <ReactMarkdown>{msg.text}</ReactMarkdown>
               </div>
             </div>
           ))}
