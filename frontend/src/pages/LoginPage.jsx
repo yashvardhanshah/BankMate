@@ -59,15 +59,16 @@ function LoginPage() {
       {/* Left-side headline, bottom-aligned with the card */}
       <div
         className={`relative z-10 max-w-md mr-auto mb-2 hidden md:block transition-all duration-700 ${
+
           mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}
       >
-        <h1 className="text-4xl lg:text-5xl font-bold text-white leading-[1.15] mb-5 whitespace-nowrap">
+        <h1 className="text-3xl lg:text-4xl font-bold text-white leading-[1.15] mb-4 whitespace-nowrap">
           Banking, reimagined
           <br />
           with AI.
         </h1>
-        <p className="text-slate-200/80 text-lg leading-relaxed max-w-[16.5rem]">
+        <p className="text-slate-200/80 text-base leading-relaxed max-w-[15rem]">
           Check balances, review transactions, and manage your cards — just by asking.
         </p>
       </div>
@@ -75,12 +76,12 @@ function LoginPage() {
       {/* Floating card */}
       <form
         onSubmit={handleLogin}
-        className={`relative z-10 bg-white/95 backdrop-blur-xl p-12 rounded-3xl shadow-2xl w-full max-w-lg transition-all duration-700 ${
+        className={`relative z-10 bg-white/95 backdrop-blur-xl p-8 rounded-3xl shadow-2xl w-full max-w-md transition-all duration-700 ${
           mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         }`}
       >
-        <h2 className="text-3xl font-bold text-slate-900 mb-1">Hello again!</h2>
-        <p className="text-slate-500 mb-9">Welcome back to BankMate</p>
+        <h2 className="text-2xl font-bold text-slate-900 mb-1">Hello again!</h2>
+        <p className="text-slate-500 text-sm mb-6">Welcome back to BankMate</p>
 
         {error && (
           <div className="bg-rose-50 border border-rose-200 text-rose-600 text-sm p-3 rounded-lg mb-5">
@@ -93,7 +94,7 @@ function LoginPage() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border border-slate-300 rounded-xl p-3.5 mb-5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+          className="w-full border border-slate-300 rounded-xl p-3.5 mb-7 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
           placeholder="you@example.com"
           required
         />
@@ -111,7 +112,7 @@ function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-slate-900 text-white font-semibold py-4 rounded-xl hover:bg-slate-800 active:scale-[0.98] transition-all disabled:opacity-50"
+          className="w-full bg-slate-900 text-white font-semibold py-3 rounded-xl hover:bg-slate-800 active:scale-[0.98] transition-all disabled:opacity-50"
         >
           {loading ? 'Signing in...' : 'Sign in'}
         </button>

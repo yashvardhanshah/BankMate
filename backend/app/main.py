@@ -7,7 +7,7 @@ from app.gemini_client import chat_with_gemini #(s26)
 from app.database import get_db
 from app.tools import get_balance, get_transactions, freeze_card, unfreeze_card
 # NEW: needed for signup/login
-from app.models import User
+from app.models import User, Account, Transaction
 from app.auth import hash_password, verify_password, create_access_token
 from app.auth import get_current_user
 
@@ -181,3 +181,42 @@ def get_my_transactions(current_user: User = Depends(get_current_user), limit: i
             })
 
     return {"transactions": all_transactions}
+
+class TransactRequest(BaseModel):
+    type: str
+    amount: float
+    description: str = None
+    category: str = None
+
+
+@app.post("/me/transact")
+def transact(request: TransactRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if not current_user.accounts:
+        return {"error": "No account found"}
+
+    account = current_user.accounts[0]
+
+    if request.type == "credit":
+        account.balance += request.amount
+    elif request.type == "debit":
+        if account.balance < request.amount:
+            return {"error": "Insufficient balance"}
+        account.balance -= request.amount
+    else:
+        return {"error": "Invalid transaction type"}
+
+    new_txn = Transaction(
+        account=account,
+        transaction_type=request.type,
+        category=request.category or "other",
+        amount=request.amount,
+        description=request.description or ("Money added" if request.type == "credit" else "Money withdrawn")
+    )
+    db.add(new_txn)
+    db.commit()
+    db.refresh(account)
+
+    return {
+        "message": "Transaction successful",
+        "new_balance": account.balance
+    }
