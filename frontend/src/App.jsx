@@ -3,9 +3,7 @@ import LoginPage from './pages/LoginPage'
 
 import SignupPage from './pages/SignupPage'
 
-function DashboardPage() {
-  return <h1 className="text-2xl font-bold p-8">Dashboard Page</h1>
-}
+import DashboardPage from './pages/DashboardPage'
 
 function ChatPage() {
   return <h1 className="text-2xl font-bold p-8">Chat Page</h1>
