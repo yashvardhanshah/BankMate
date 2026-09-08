@@ -1,12 +1,15 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+import random
+from app.models import Account
 from app.gemini_client import chat_with_gemini #(s26)
 from app.database import get_db
 from app.tools import get_balance, get_transactions, freeze_card, unfreeze_card
 # NEW: needed for signup/login
 from app.models import User
 from app.auth import hash_password, verify_password, create_access_token
+from app.auth import get_current_user
 
 app = FastAPI()
 
@@ -61,19 +64,31 @@ class ChatRequest(BaseModel):
 
 #check notes (s26)
 @app.post("/chat")
-def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
-    reply = chat_with_gemini(request.message, db)
+def chat_endpoint(
+    request: ChatRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Get the current user's real account (from their token, not guessed)
+    account_number = current_user.accounts[0].account_number if current_user.accounts else None
+
+    # Include the real account number in the message sent to Gemini,
+    # so it doesn't need to ask for it or guess it
+    message_with_context = f"{request.message} (My account number is {account_number})"
+
+    reply = chat_with_gemini(message_with_context, db)
     return {"reply": reply}
+
+
+def generate_account_number():
+    return str(random.randint(1000000000, 9999999999))
 
 @app.post("/signup")
 def signup(request: SignupRequest, db: Session = Depends(get_db)):
-
-    # Step 1: check if this email is already registered
     existing_user = db.query(User).filter(User.email == request.email).first()
     if existing_user:
         return {"error": "Email already registered"}
 
-    # Step 2: create the new user — password gets hashed here, never stored raw
     new_user = User(
         full_name=request.full_name,
         email=request.email,
@@ -82,12 +97,21 @@ def signup(request: SignupRequest, db: Session = Depends(get_db)):
     )
     db.add(new_user)
     db.commit()
-    db.refresh(new_user)  # pulls the real, DB-assigned id into new_user.id
+    db.refresh(new_user)
 
-    # Step 3: auto-login — issue a real token for this brand new user
+    # NEW: automatically create a starter checking account for this new user
+    new_account = Account(
+        user=new_user,
+        account_number=generate_account_number(),
+        account_type="checking",
+        balance=0.0,
+        currency="INR"
+    )
+    db.add(new_account)
+    db.commit()
+
     token = create_access_token({"user_id": new_user.id})
 
-    # Step 4: return success + token
     return {
         "message": "Signup successful",
         "access_token": token,
