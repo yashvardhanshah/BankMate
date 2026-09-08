@@ -148,3 +148,36 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         "access_token": token,
         "token_type": "bearer"
     }
+
+@app.get("/me/accounts")
+def get_my_accounts(current_user: User = Depends(get_current_user)):
+    accounts_data = []
+    for account in current_user.accounts:
+        accounts_data.append({
+            "account_number": account.account_number,
+            "account_type": account.account_type,
+            "balance": account.balance,
+            "currency": account.currency
+        })
+
+    return {
+        "full_name": current_user.full_name,
+        "accounts": accounts_data
+    }
+
+@app.get("/me/transactions")
+def get_my_transactions(current_user: User = Depends(get_current_user), limit: int = 5):
+    all_transactions = []
+    for account in current_user.accounts:
+        for t in sorted(account.transactions, key=lambda x: x.created_at, reverse=True)[:limit]:
+            all_transactions.append({
+                "account_number": account.account_number,
+                "type": t.transaction_type,
+                "category": t.category,
+                "amount": t.amount,
+                "description": t.description,
+                "merchant": t.merchant,
+                "date": t.created_at.isoformat() if t.created_at else None
+            })
+
+    return {"transactions": all_transactions}
