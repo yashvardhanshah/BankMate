@@ -2,10 +2,10 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 import random
+import os
 from app.models import Account
 from app.gemini_client import chat_with_gemini #(s26)
 from app.database import get_db
-from app.tools import get_balance, get_transactions, freeze_card, unfreeze_card
 # NEW: needed for signup/login
 from app.models import User, Account, Transaction
 from app.auth import hash_password, verify_password, create_access_token
@@ -17,23 +17,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-class AccountRequest(BaseModel):
-    account_number: str
-
-
-class TransactionsRequest(BaseModel):
-    account_number: str
-    limit: int = 5
-
-
-class CardRequest(BaseModel):
-    card_number_last4: str
 
 # What data /signup expects: name, email, password required. phone optional.
 class SignupRequest(BaseModel):
@@ -49,24 +38,7 @@ class LoginRequest(BaseModel):
     password: str
 
 
-@app.post("/balance")
-def balance_endpoint(request: AccountRequest, db: Session = Depends(get_db)):
-    return get_balance(db, request.account_number)
 
-
-@app.post("/transactions")
-def transactions_endpoint(request: TransactionsRequest, db: Session = Depends(get_db)):
-    return get_transactions(db, request.account_number, request.limit)
-
-
-@app.post("/freeze-card")
-def freeze_card_endpoint(request: CardRequest, db: Session = Depends(get_db)):
-    return freeze_card(db, request.card_number_last4)
-
-
-@app.post("/unfreeze-card")
-def unfreeze_card_endpoint(request: CardRequest, db: Session = Depends(get_db)):
-    return unfreeze_card(db, request.card_number_last4)
 
 class ChatRequest(BaseModel):
     message: str
@@ -191,6 +163,8 @@ class TransactRequest(BaseModel):
 
 @app.post("/me/transact")
 def transact(request: TransactRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if request.amount <= 0:
+        return {"error": "Amount must be greater than zero"}
     if not current_user.accounts:
         return {"error": "No account found"}
 

@@ -1,5 +1,6 @@
 import ReactMarkdown from 'react-markdown'
 import { useState, useRef, useEffect } from 'react'
+import { API_URL } from '../config'
 
 function ChatPage() {
   const [messages, setMessages] = useState([
@@ -24,7 +25,7 @@ function ChatPage() {
 
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://127.0.0.1:8000/chat', {
+      const response = await fetch(   API_URL + '/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
